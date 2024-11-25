@@ -1,35 +1,33 @@
 async function getAllMeds() {
     try {
-        const response = await fetch('/backend/data.json');  // Fetch the data from the backend folder
-        const data = await response.json();  // Parse the response to JSON
-        return data.medicines || [];  // Return the medicines array or an empty array if it doesn't exist
+        const response = await fetch('/backend/data.json');  
+        const data = await response.json(); 
+        return data.medicines || []; 
     } catch (error) {
         console.error('Error fetching medicines:', error);
-        return [];  // Return an empty array if there's an error
+        return []; 
     }
 }
 
-// Add event listener for the "Get All Medicines" button
 document.getElementById('fetchAll').addEventListener('click', async function() {
     const medicines = await getAllMeds();  // Fetch the medicines when button is clicked
     displayMedicines(medicines);  // Display the medicines in the HTML
 });
 
-// Function to display the medicines in the page
 function displayMedicines(medicines) {
     const outputDiv = document.getElementById('medicinesList');
-    outputDiv.innerHTML = '';  // Clear previous list, if any
+    outputDiv.innerHTML = '';  
 
     if (medicines.length === 0) {
-        outputDiv.innerHTML = '<p>No medicines found.</p>';  // Display message if no medicines are available
+        outputDiv.innerHTML = '<p>No medicines found.</p>'; 
     } else {
         const list = document.createElement('ul');
         medicines.forEach(med => {
             const listItem = document.createElement('li');
-            listItem.textContent = `${med.name} - $${med.price}`;  // Display medicine name and price
+            listItem.textContent = `${med.name} - $${med.price}`; 
             list.appendChild(listItem);
         });
-        outputDiv.appendChild(list);  // Append the list to the page
+        outputDiv.appendChild(list);  
     }
 }
 
