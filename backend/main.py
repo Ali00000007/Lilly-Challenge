@@ -1,5 +1,14 @@
 from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+import uvicorn
+import json
+from fastapi.responses import HTMLResponse
+
+
+
 """
 This module defines a FastAPI application for managing a list of medicines.
 It provides endpoints to retrieve all medicines, retrieve a single medicine by name,
@@ -19,10 +28,13 @@ Functions:
 Usage:
 Run this module directly to start the FastAPI application.
 """
-import uvicorn
-import json
+
 
 app = FastAPI()
+
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+app.mount("/backend", StaticFiles(directory="backend"), name="backend")
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,19 +44,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    # Define the path to index.html
+    index_path = os.path.join(os.getcwd(), 'frontend', 'index.html')
+    
+    # Read and return the contents of index.html
+    with open(index_path, "r") as f:
+        content = f.read()
+    
+    return HTMLResponse(content)
+
 @app.get("/medicines")
 def get_all_meds():
+    all_meds_path = os.path.join(os.getcwd(), 'backend', 'data.json')
+
     """
     This function reads the data.json file and returns all medicines.
     Returns:
         dict: A dictionary of all medicines
     """
-    with open('data.json') as meds:
+    with open(all_meds_path) as meds:
         data = json.load(meds)
     return data
 
 @app.get("/medicines/{name}")
 def get_single_med(name: str):
+    med_path = os.path.join(os.getcwd(), 'backend', 'data.json')
+
     """
     This function reads the data.json file and returns a single medicine by name.
     Args:
@@ -52,10 +79,9 @@ def get_single_med(name: str):
     Returns:
         dict: A dictionary containing the medicine details
     """
-    with open('data.json') as meds:
+    with open(med_path) as meds:
         data = json.load(meds)
         for med in data["medicines"]:
-            print(med)
             if med['name'] == name:
                 return med
     return {"error": "Medicine not found"}
@@ -71,7 +97,7 @@ def create_med(name: str = Form(...), price: float = Form(...)):
     Returns:
         dict: A message confirming the medicine was created successfully.
     """
-    with open('data.json', 'r+') as meds:
+    with open('/backend/data.json', 'r+') as meds:
         current_db = json.load(meds)
         new_med = {"name": name, "price": price}
         current_db["medicines"].append(new_med)
@@ -92,7 +118,7 @@ def update_med(name: str = Form(...), price: float = Form(...)):
     Returns:
         dict: A message confirming the medicine was updated successfully.
     """
-    with open('data.json', 'r+') as meds:
+    with open('/backend/data.json', 'r+') as meds:
         current_db = json.load(meds)
         for med in current_db["medicines"]:
             if med['name'] == name:
@@ -113,7 +139,7 @@ def delete_med(name: str = Form(...)):
     Returns:
         dict: A message confirming the medicine was deleted successfully.
     """
-    with open('data.json', 'r+') as meds:
+    with open('/backend/data.json', 'r+') as meds:
         current_db = json.load(meds)
         for med in current_db["medicines"]:
             if med['name'] == name:
@@ -127,4 +153,4 @@ def delete_med(name: str = Form(...)):
 # Add your average function here
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
